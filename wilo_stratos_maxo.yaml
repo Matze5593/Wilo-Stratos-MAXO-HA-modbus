@@ -1,0 +1,344 @@
+modbus:
+  - name: wilo_stratos_maxo
+    type: tcp
+    host: xxx.xxx.xxx.xxx
+    port: 502
+    timeout: 5
+    delay: 2
+    message_wait_milliseconds: 100
+
+    sensors:
+      # --- Messwerte & Prozessdaten (FC04 Input Registers) ---
+      - name: "Wilo Förderhöhe"
+        unique_id: wilo_stratos_maxo_foerderhoehe
+        slave: 1
+        address: 1
+        input_type: input
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "m"
+        state_class: measurement
+        scan_interval: 15
+
+      - name: "Wilo Volumenstrom"
+        unique_id: wilo_stratos_maxo_volumenstrom
+        slave: 1
+        address: 2
+        input_type: input
+        data_type: uint16
+        scale: 0.1
+        precision: 1
+        unit_of_measurement: "m³/h"
+        state_class: measurement
+        scan_interval: 15
+
+      - name: "Wilo Energie Gesamt"
+        unique_id: wilo_stratos_maxo_energie_gesamt
+        slave: 1
+        address: 3
+        input_type: input
+        data_type: uint16
+        scale: 1
+        precision: 0
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        scan_interval: 60
+
+      - name: "Wilo Leistungsaufnahme"
+        unique_id: wilo_stratos_maxo_leistungsaufnahme
+        slave: 1
+        address: 4
+        input_type: input
+        data_type: uint16
+        scale: 1
+        precision: 0
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        scan_interval: 15
+
+      - name: "Wilo Betriebsstunden"
+        unique_id: wilo_stratos_maxo_betriebsstunden
+        slave: 1
+        address: 5
+        input_type: input
+        data_type: uint16
+        scale: 10
+        precision: 0
+        unit_of_measurement: "h"
+        device_class: duration
+        state_class: total_increasing
+        scan_interval: 300
+
+      - name: "Wilo Drehzahl"
+        unique_id: wilo_stratos_maxo_drehzahl
+        slave: 1
+        address: 7
+        input_type: input
+        data_type: uint16
+        scale: 1
+        precision: 0
+        unit_of_measurement: "rpm"
+        state_class: measurement
+        scan_interval: 15
+
+      - name: "Wilo Medientemperatur"
+        unique_id: wilo_stratos_maxo_medientemperatur
+        slave: 1
+        address: 8
+        input_type: input
+        data_type: uint16
+        scale: 0.1
+        offset: -273.15
+        precision: 1
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        scan_interval: 15
+
+      - name: "Wilo Regelungsart Code"
+        unique_id: wilo_stratos_maxo_regelungsart_code
+        slave: 1
+        address: 10
+        input_type: input
+        data_type: uint16
+        scan_interval: 60
+
+      - name: "Wilo Service-Meldung Code"
+        unique_id: wilo_stratos_maxo_service_code
+        slave: 1
+        address: 36
+        input_type: input
+        data_type: uint16
+        scan_interval: 60
+
+      - name: "Wilo Störungs-Code"
+        unique_id: wilo_stratos_maxo_stoerungs_code
+        slave: 1
+        address: 37
+        input_type: input
+        data_type: uint16
+        scan_interval: 30
+
+      - name: "Wilo Pumpenstatus Code"
+        unique_id: wilo_stratos_maxo_pumpenstatus_code
+        slave: 1
+        address: 38
+        input_type: input
+        data_type: uint16
+        scan_interval: 15
+
+      - name: "Wilo Diagnose-Status Code"
+        unique_id: wilo_stratos_maxo_diagnose_code
+        slave: 1
+        address: 39
+        input_type: input
+        data_type: uint16
+        scan_interval: 60
+
+      # --- Aktuelle Steuerparameter (FC03 Holding Registers) ---
+      - name: "Wilo Bus-Sollwert Roh"
+        unique_id: wilo_stratos_maxo_bus_sollwert_roh
+        slave: 1
+        address: 1
+        input_type: holding
+        data_type: uint16
+        scan_interval: 30
+
+      - name: "Wilo Pumpenkommando Reg 40"
+        unique_id: wilo_stratos_maxo_kommando_reg40
+        slave: 1
+        address: 40
+        input_type: holding
+        data_type: uint16
+        scan_interval: 30
+
+      - name: "Wilo Regelungsart Vorgabe Reg 42"
+        unique_id: wilo_stratos_maxo_regelungsart_reg42
+        slave: 1
+        address: 42
+        input_type: holding
+        data_type: uint16
+        scan_interval: 60
+
+      - name: "Wilo Bus Command Timer Reg 300"
+        unique_id: wilo_stratos_maxo_bus_timer_reg300
+        slave: 1
+        address: 300
+        input_type: holding
+        data_type: uint16
+        scan_interval: 60
+
+      - name: "Wilo Bus Timeout Reg 400"
+        unique_id: wilo_stratos_maxo_bus_timeout_reg400
+        slave: 1
+        address: 400
+        input_type: holding
+        data_type: uint16
+        unit_of_measurement: "s"
+        scan_interval: 120
+
+template:
+  - binary_sensor:
+      - name: "Wilo Pumpe läuft"
+        unique_id: wilo_stratos_maxo_pumpe_laeuft
+        device_class: running
+        state: >
+          {{ (states('sensor.wilo_pumpenstatus_code') | int(0) | bitwise_and(1)) > 0 }}
+
+      - name: "Wilo Störung"
+        unique_id: wilo_stratos_maxo_stoerung
+        device_class: problem
+        state: >
+          {{ states('sensor.wilo_storungs_code') | int(0) > 0 }}
+
+      - name: "Wilo Service-Meldung"
+        unique_id: wilo_stratos_maxo_service_meldung
+        device_class: problem
+        state: >
+          {{ states('sensor.wilo_service_meldung_code') | int(0) > 0 }}
+
+  - sensor:
+      - name: "Wilo Regelungsart"
+        unique_id: wilo_stratos_maxo_regelungsart_text
+        state: >
+          {% set code = states('sensor.wilo_regelungsart_code') | int(-1) %}
+          {% set map = {
+            0: 'Konstantdrehzahl (n-c)',
+            1: 'Differenzdruck konstant (Δp-c)',
+            2: 'Differenzdruck variabel (Δp-v)',
+            3: 'Konstantvolumenstrom (Q-const)',
+            15: 'Lokal / Automatik',
+            17: 'Dynamic Adapt plus (Heizkörper)',
+            20: 'Dynamic Adapt plus (Fußbodenheizung)',
+            21: 'Dynamic Adapt plus (Deckenkühlung)'
+          } %}
+          {{ map.get(code, 'Code ' ~ code) }}
+
+      - name: "Wilo Bus-Sollwert"
+        unique_id: wilo_stratos_maxo_bus_sollwert_prozent
+        unit_of_measurement: "%"
+        state: >
+          {% set raw = states('sensor.wilo_bus_sollwert_roh') | int(32767) %}
+          {% if raw == 32767 or raw == 65535 %}
+            Lokalbetrieb
+          {% else %}
+            {{ (raw * 0.5) | round(1) }}
+          {% endif %}
+
+input_select:
+  wilo_betriebsmodus:
+    name: "Wilo Betriebsmodus (Reg 40)"
+    icon: mdi:pump
+    options:
+      - "Lokalbetrieb (Pumpe regelt selbst)"
+      - "Ein (Bus-Betrieb)"
+      - "Aus (Stopp)"
+      - "Min-Betrieb"
+      - "Max-Betrieb"
+    initial: "Lokalbetrieb (Pumpe regelt selbst)"
+
+  wilo_regelungsart_auswahl:
+    name: "Wilo Regelungsart einstellen (Reg 42)"
+    icon: mdi:tune
+    options:
+      - "Dynamic Adapt plus (Heizkörper)"
+      - "Dynamic Adapt plus (Fußbodenheizung)"
+      - "Differenzdruck konstant (Δp-c)"
+      - "Differenzdruck variabel (Δp-v)"
+      - "Konstantdrehzahl (n-c)"
+    initial: "Dynamic Adapt plus (Heizkörper)"
+
+input_number:
+  wilo_sollwert_prozent:
+    name: "Wilo Sollwert relativ (Reg 1)"
+    icon: mdi:percent
+    min: 0
+    max: 100
+    step: 0.5
+    unit_of_measurement: "%"
+    mode: slider
+
+  wilo_bus_timeout_sekunden:
+    name: "Wilo Bus-Fallback-Timeout (Reg 400)"
+    icon: mdi:timer-outline
+    min: 20
+    max: 3600
+    step: 10
+    unit_of_measurement: "s"
+    mode: box
+
+automation:
+  - id: wilo_write_betriebsmodus
+    alias: "Wilo: Betriebsmodus per Modbus schreiben"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_select.wilo_betriebsmodus
+    action:
+      - service: modbus.write_register
+        data:
+          hub: wilo_stratos_maxo
+          slave: 1
+          address: 40
+          value: >
+            {% set map = {
+              'Aus (Stopp)': 0,
+              'Ein (Bus-Betrieb)': 1,
+              'Min-Betrieb': 2,
+              'Max-Betrieb': 4,
+              'Lokalbetrieb (Pumpe regelt selbst)': 8
+            } %}
+            {{ map.get(states('input_select.wilo_betriebsmodus'), 8) }}
+
+  - id: wilo_write_sollwert
+    alias: "Wilo: Relativen Sollwert per Modbus schreiben"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_number.wilo_sollwert_prozent
+    action:
+      - service: modbus.write_register
+        data:
+          hub: wilo_stratos_maxo
+          slave: 1
+          address: 1
+          value: "{{ (states('input_number.wilo_sollwert_prozent') | float(0) * 2) | round(0) | int }}"
+
+  - id: wilo_write_regelungsart
+    alias: "Wilo: Regelungsart per Modbus schreiben"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_select.wilo_regelungsart_auswahl
+    action:
+      - service: modbus.write_register
+        data:
+          hub: wilo_stratos_maxo
+          slave: 1
+          address: 42
+          value: >
+            {% set map = {
+              'Konstantdrehzahl (n-c)': 0,
+              'Differenzdruck konstant (Δp-c)': 1,
+              'Differenzdruck variabel (Δp-v)': 2,
+              'Dynamic Adapt plus (Heizkörper)': 17,
+              'Dynamic Adapt plus (Fußbodenheizung)': 20
+            } %}
+            {{ map.get(states('input_select.wilo_regelungsart_auswahl'), 17) }}
+
+  - id: wilo_write_bus_timeout
+    alias: "Wilo: Bus-Timeout per Modbus schreiben"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_number.wilo_bus_timeout_sekunden
+    action:
+      - service: modbus.write_register
+        data:
+          hub: wilo_stratos_maxo
+          slave: 1
+          address: 400
+          value: "{{ states('input_number.wilo_bus_timeout_sekunden') | int(300) }}"
